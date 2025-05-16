@@ -1,0 +1,25 @@
+services:
+
+  flower:
+    container_name: flower
+    image: mher/flower
+    restart: always
+    env_file:
+      - .env
+    environment:
+      - FLOWER_BASIC_AUTH=${FLOWER_USERNAME}:${FLOWER_PASSWORD} 
+      - FLOWER_BROKER=${REDIS_URL}
+    ports:
+      - "5555:5555"
+    networks:
+      - db_common_default
+    depends_on:
+      - redis
+    command: celery -A decoviz flower --port=5555 --broker=${REDIS_URL}
+
+volumes:
+  redis_data:
+
+networks:
+  db_common_default: 
+    driver: bridge
