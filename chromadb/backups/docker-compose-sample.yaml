@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  chromadb:
+    image: chromadb/chroma:0.4.15
+    container_name: chromadb
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8083:8083"
+    volumes:
+      - chromadb_data:/chroma/data
+    environment:
+      - ALLOW_RESET=true
+      - ANONYMIZED_TELEMETRY=False
+    command: >
+      bash -c "pip install numpy==1.24.4 &&
+               python -m chromadb.app"
+
+volumes:
+  chromadb_data:
+    driver: local

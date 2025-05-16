@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ChromaDB Explorer</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        h1 { color: #333; }
+        .collection { 
+            cursor: pointer; 
+            padding: 10px; 
+            margin: 5px 0; 
+            background-color: #f0f0f0; 
+            border-radius: 4px;
+        }
+        .collection:hover { background-color: #e0e0e0; }
+        #collection-data { 
+            margin-top: 20px; 
+            border: 1px solid #ddd; 
+            padding: 15px;
+            border-radius: 4px;
+        }
+        pre { white-space: pre-wrap; }
+    </style>
+</head>
+<body>
+    <h1>ChromaDB Explorer</h1>
+    
+    <h2>Collections</h2>
+    <div id="collections-list">Loading...</div>
+    
+    <div id="collection-data">
+        <h2>Collection Data</h2>
+        <div id="collection-info">Select a collection to view data</div>
+        <pre id="collection-json"></pre>
+    </div>
+    
+    <script>
+        // Fetch collections on page load
+        fetch('/collections')
+            .then(response => response.json())
+            .then(collections => {
+                const listElement = document.getElementById('collections-list');
+                if (collections.length === 0) {
+                    listElement.innerHTML = '<p>No collections found</p>';
+                    return;
+                }
+                
+                listElement.innerHTML = collections.map(name => 
+                    `<div class="collection" onclick="loadCollection('${name}')">${name}</div>`
+                ).join('');
+            });
+        
+        // Load collection data
+        function loadCollection(name) {
+            document.getElementById('collection-info').innerHTML = `Loading ${name}...`;
+            document.getElementById('collection-json').innerHTML = '';
+            
+            fetch(`/collection/${name}`)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('collection-info').innerHTML = 
+                        `Collection: ${name} (${data.count} items)`;
+                    document.getElementById('collection-json').innerHTML = 
+                        JSON.stringify(data.data, null, 2);
+                })
+                .catch(error => {
+                    document.getElementById('collection-info').innerHTML = 
+                        `Error loading collection ${name}: ${error.message}`;
+                });
+        }
+    </script>
+</body>
+</html>

@@ -1,56 +1,34 @@
-version: '3.8'
-
 services:
-  chromadb:
-    image: chromadb/chroma:0.4.18  # Using a slightly older version for better compatibility
-    container_name: chromadb
-    restart: unless-stopped
+
+  application:
+    container_name: application
+    build:
+      context: .
+      dockerfile: ./Dockerfile
     ports:
-      - "127.0.0.1:8083:8083"
+      - "5000:5000"
+    image: application
     volumes:
-      - ./config/auth_credentials.json:/chroma/auth_credentials.json
-      - chromadb_data:/chroma/data
-      - chromadb_backups:/chroma/backups
-    environment:
-      - PERSISTENCE_DIRECTORY=/chroma/data
-      - ALLOW_RESET=false
-      - CHROMA_SERVER_AUTH_PROVIDER=token
-      - CHROMA_SERVER_AUTH_CREDENTIALS_PROVIDER=chromadb.auth.token.TokenAuthCredentialsProvider
-      - CHROMA_SERVER_AUTH_CREDENTIALS_FILE=/chroma/auth_credentials.json
-      - CHROMA_OTEL_SERVICE_NAME=${CHROMA_OTEL_SERVICE_NAME:-chromadb}
-      - CHROMA_OTEL_EXPORTER_ENDPOINT=${CHROMA_OTEL_EXPORTER_ENDPOINT:-}
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8083/api/v1/heartbeat"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 20s
+      - ./:/app/
     networks:
-      - db_common_default
-    deploy:
-      resources:
-        limits:
-          cpus: '${CHROMA_CPU_LIMIT:-2}'
-          memory: ${CHROMA_MEMORY_LIMIT:-4G}
-        reservations:
-          cpus: '${CHROMA_CPU_RESERVATION:-0.5}'
-          memory: ${CHROMA_MEMORY_RESERVATION:-1G}
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "${CHROMA_LOG_MAX_SIZE:-200m}"
-        max-file: "${CHROMA_LOG_MAX_FILE:-3}"
+      - net
+
+  chroma:
+    image: ghcr.io/chroma-core/chroma:latest
+    container_name: chroma
+    volumes:
+      - index_data:/chroma/.chroma/index
+    ports:
+      - 8000:8000 # host:container
+    networks:
+      - net
 
 volumes:
-  chromadb_data:
+  index_data:
     driver: local
-  chromadb_backups:
+  backups:
     driver: local
-    
+
 networks:
-  db_common_default:
+  net:
     driver: bridge
-    ipam:
-      driver: default
-      config:
-        - subnet: ${DOCKER_SUBNET:-172.28.0.0/16}

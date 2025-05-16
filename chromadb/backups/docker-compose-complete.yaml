@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  chromadb:
+    image: chromadb/chroma:0.4.15
+    container_name: chromadb
+    restart: unless-stopped
+    ports:
+      - "8083:8083"
+    volumes:
+      - chromadb_data:/chroma/data
+    environment:
+      - ALLOW_RESET=true
+      - ANONYMIZED_TELEMETRY=False
+    command: >
+      bash -c "pip install numpy==1.24.4 &&
+               python -m chromadb.app"
+    networks:
+      - chromadb_network
+
+  chromadb_ui:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: chromadb_ui
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      - CHROMA_HOST=chromadb
+      - CHROMA_PORT=8083
+    depends_on:
+      - chromadb
+    networks:
+      - chromadb_network
+
+volumes:
+  chromadb_data:
+    driver: local
+
+networks:
+  chromadb_network:
+    driver: bridge
