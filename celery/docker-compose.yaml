@@ -1,0 +1,23 @@
+services:
+
+  celery_worker:
+    container_name: celery_worker
+    build:
+      context: .
+      dockerfile: common/Dockerfile
+    env_file:
+      - .env
+    volumes:
+      - ./logs/celery:/app/logs/celery 
+    networks:
+      - db_common_default
+    depends_on:
+      - redis
+    command: ["/usr/bin/supervisord"]
+
+volumes:
+  redis_data:
+
+networks:
+  db_common_default: 
+    driver: bridge

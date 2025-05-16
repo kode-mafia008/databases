@@ -1,0 +1,27 @@
+services:
+
+  qdrant:
+    image: qdrant/qdrant
+    container_name: qdrant
+    env_file:
+      - .env
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    networks:
+      - db_common_default
+    volumes:
+      - qdrant_data:/qdrant/storage
+      - ./logs/qdrant:/app/logs/qdrant
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:6333/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  qdrant_data:
+
+networks:
+  db_common_default: 
+    driver: bridge
